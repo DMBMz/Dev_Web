@@ -1,0 +1,26 @@
+{% extends 'base.html' %}
+{% block title %}Novidades{% endblock %}
+
+{% block content %}
+<style>
+.centro {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    height: 100vh; /* Define a altura da div para ocupar toda a altura da tela */
+}
+</style>
+
+<div class="centro">
+    <h1>Últimas Novidades do Islink</h1>
+    <p>Inscreva-se na nossa newsletter para receber as últimas atualizações!</p>
+
+    <!-- Formulário para inscrição na newsletter -->
+    <form action="/inscrever" method="post">
+        <input type="email" name="email" placeholder="Seu email" required>
+        <button type="submit">Inscrever</button>
+    </form>
+</div>
+
+{% endblock %}
