@@ -1,0 +1,25 @@
+version: '3'
+
+services:
+  flask_app:
+    build: ./flask_app
+    ports:
+      - "5000:5000"
+    depends_on:
+      - mysql_db
+
+  mysql_db:
+    image: mysql:latest
+    restart: always
+    environment:
+      MYSQL_DATABASE: newsletter
+      MYSQL_USER: davi
+      MYSQL_PASSWORD: davi
+      MYSQL_ROOT_PASSWORD: davi
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+
+volumes:
+  mysql_data:
