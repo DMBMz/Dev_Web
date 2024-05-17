@@ -1,14 +1,21 @@
-from flask import Flask, render_template, request, redirect, url_for
+from flask import Flask, render_template, request
+
 import mysql.connector
+import smtplib
+from email.mime.multipart import MIMEMultipart
+from email.mime.text import MIMEText
 
 app = Flask(__name__)
 
-
-mysql_host = '172.17.0.2'
-mysql_user = 'davi'
-mysql_password = 'davi'
+mysql_host = 'localhost'
+mysql_user = 'root'
+mysql_password = 'fatec'
 mysql_database = 'newsletter'
 
+smtp_server = 'smtp.gmail.com'
+smtp_port = 587  
+smtp_username = 'islink.newsletter@gmail.com'
+smtp_password = "rkvd mfes ujbz wzqc"
 
 conn = mysql.connector.connect(
     host=mysql_host,
@@ -17,38 +24,78 @@ conn = mysql.connector.connect(
     database=mysql_database
 )
 
+def send_confirmation_email(email):
+    msg = MIMEMultipart()
+    msg['From'] = smtp_username
+    msg['To'] = email
+    msg['Subject'] = 'Confirmação de inscrição'
+
+    body = 'Seu email foi cadastrado com sucesso na nossa newsletter!'
+    msg.attach(MIMEText(body, 'plain'))
+
+    try:
+        server = smtplib.SMTP(smtp_server, smtp_port)
+        server.starttls()  
+        server.login(smtp_username, smtp_password)
+        server.send_message(msg)
+        server.quit()
+        print("Email enviado com sucesso!")
+    except Exception as e:
+        print("Erro ao enviar o email:", e)
+
 
 @app.route('/')
 def index():
-    return render_template('index.html')
-
+    cursor = conn.cursor()
+    cursor.execute("SELECT email FROM email")
+    emails = [row[0] for row in cursor.fetchall()] 
+    cursor.close()
+    return render_template('index.html', emails=emails)
 
 @app.route('/fotos')
 def fotos():
     return render_template('fotos.html')
 
-
 @app.route('/sobre')
 def sobre():
     return render_template('sobre.html')
 
-
 @app.route('/novidade')
 def novidade():
-    return render_template('novidade.html')
+    cursor = conn.cursor()
+    cursor.execute("SELECT nome, email FROM usuario")
+    usuarios = cursor.fetchall()
+    cursor.close()
+    return render_template('novidade.html', usuarios=usuarios)
 
 
 @app.route('/inscrever', methods=['POST'])
 def inscrever():
+    nome = request.form['nome']
     email = request.form['email']
 
-    
     cursor = conn.cursor()
-    cursor.execute("INSERT INTO newsletter (email) VALUES (%s)", (email,))
-    conn.commit()
+    cursor.execute("SELECT * FROM email WHERE email = %s", (email,))
+    existing_emails = cursor.fetchall()
     cursor.close()
 
-    return redirect(url_for('index'))
+    if existing_emails:
+        return render_template('novidade.html', mensagem1="Este e-mail já está cadastrado.")
+    else:
+        cursor = conn.cursor()
+        cursor.execute("INSERT INTO email (email) VALUES (%s)", (email,))
+        conn.commit()
+        cursor.close()
+
+        cursor = conn.cursor()
+        cursor.execute("INSERT INTO usuario (nome, email) VALUES (%s, %s)", (nome, email))
+        conn.commit()
+        cursor.close()
+
+        send_confirmation_email(email)
+
+        return render_template('novidade.html', mensagem2="E-mail cadastrado com sucesso!")
+
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    app.run(debug=True, host="0.0.0.0")
