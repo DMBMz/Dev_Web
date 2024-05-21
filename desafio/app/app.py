@@ -7,7 +7,7 @@ from email.mime.text import MIMEText
 
 app = Flask(__name__)
 
-mysql_host = 'localhost'
+mysql_host = 'db'
 mysql_user = 'root'
 mysql_password = 'fatec'
 mysql_database = 'newsletter'

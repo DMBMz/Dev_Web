@@ -1,21 +1,24 @@
 version: '3'
 
 services:
+  build: .
   flask_app:
-    build: ./flask_app
-    ports:
-      - "5000:5000"
-    depends_on:
-      - mysql_db
+  ports:
+    - "5000:5000"
+  environment:
+   - FLASK_ENV=development
+   - DATABASE_HOST=db
+   - DATABASE_USER=root
+   - DATABASE_PASSWORD=fatec
+   - DATABASE_BD=newsletter
+  depends_on:
+    - db
 
-  mysql_db:
+  db:
     image: mysql:latest
-    restart: always
     environment:
-      MYSQL_DATABASE: newsletter
-      MYSQL_USER: davi
-      MYSQL_PASSWORD: davi
-      MYSQL_ROOT_PASSWORD: davi
+      - MYSQL_ROOT_PASSWORD=root
+      - MYSQL_DATABASE=newsletter
     ports:
       - "3306:3306"
     volumes:
@@ -23,3 +26,4 @@ services:
 
 volumes:
   mysql_data:
+  - ./init.sql:/docker-entrypoint-initdb.d/init.sql
